@@ -97,3 +97,39 @@ object MeetCats extends App {
 
   println(cat.show)
 }
+
+/**
+  * 1.3 - Example: Eq
+  */
+
+object ExampleEq extends App {
+
+  import cats.Eq
+  import cats.instances.int._
+  import cats.instances.string._
+  import cats.instances.option._
+  import cats.syntax.eq._
+
+  final case class Cat(name: String, age: Int, colour: String)
+
+  val cat1 = Cat("Garfield", 35, "orange and black")
+  val cat2 = Cat("Heathcliff", 30, "orange and black")
+
+  val optionCat1 = Option(cat1)
+  val optionCat2 = Option.empty[Cat]
+
+  implicit val catEq: Eq[Cat] = Eq.instance[Cat] { (cat1, cat2) =>
+    cat1.name === cat2.name &&
+      cat1.age === cat2.age &&
+      cat1.colour === cat2.colour
+  }
+
+  println("cat1 === cat2: " + (cat1 === cat2))
+  println("cat1 =!= cat2: " + (cat1 =!= cat2))
+  println("cat1 === cat1: " + (cat1 === cat1))
+  println("cat1 =!= cat1: " + (cat1 =!= cat1))
+
+  println("optionCat1 === optionCat2: " + (optionCat1 === optionCat2))
+  println("optionCat1 === optionCat1: " + (optionCat1 === optionCat1))
+
+}
