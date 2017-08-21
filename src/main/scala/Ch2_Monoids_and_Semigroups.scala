@@ -1,17 +1,23 @@
 
-trait Semigroup[A] {
-  def combine(x: A, y: A): A
-}
+object Groups {
 
-trait Monoid[A] extends Semigroup[A] {
-  def empty: A
-}
+  trait Semigroup[A] {
+    def combine(x: A, y: A): A
+  }
 
-object Monoid {
-  def apply[A](implicit monoid: Monoid[A]): Monoid[A] = monoid
+  trait Monoid[A] extends Semigroup[A] {
+    def empty: A
+  }
+
+  object Monoid {
+    def apply[A](implicit monoid: Monoid[A]): Monoid[A] = monoid
+  }
+
 }
 
 object Laws {
+  import Groups._
+
   //Monoid and Semigroup
   def associativeLaw[A](x: A, y: A, z: A)(implicit m: Monoid[A]): Boolean =
     m.combine(x, m.combine(y, z)) == m.combine(m.combine(x, y), z)
@@ -26,6 +32,7 @@ object Laws {
   */
 object TheTruthAboutMonoids extends App {
 
+  import Groups._
   import Laws._
 
   implicit val booleanAndMonoid: Monoid[Boolean] = new Monoid[Boolean] {
@@ -76,13 +83,12 @@ object TheTruthAboutMonoids extends App {
 /**
   * 2.4 All Set for Monoids
   *
-  * Doing implicit defs allows the to use generic types
-  *
   * Set add and Union are monoids. Intersect fails the
   * Identity Law check, thus it is a Semigroup
   */
 object AllSetForMonoids extends App {
 
+  import Groups._
   import Laws._
 
   implicit def setAddMonoid[A](): Monoid[Set[A]] = new Monoid[Set[A]] {
@@ -118,4 +124,32 @@ object AllSetForMonoids extends App {
   println("setAddMonoid (set1): " + identityLaw(set1)(setAddMonoid()))
   println("setUnionMonoid (set1): " + identityLaw(set1)(setUnionMonoid()))
   println("setIntersectMonoid (set1): " + identityLaw(set1)(setIntersectMonoid()))
+}
+
+
+/**
+  * 2.5 Monoids In Cats
+  */
+object MonoidsInCats extends App {
+  import cats.syntax.semigroup._
+  import cats.Monoid
+
+  case class Order(totalCost: Double, quantity: Double)
+
+  implicit val orderMonoid: Monoid[Order] = new Monoid[Order] {
+    override def combine(order1: Order, order2: Order): Order = {
+      Order(
+        order1.totalCost + order2.totalCost,
+        order1.quantity + order2.quantity
+      )
+    }
+
+    override def empty: Order = Order(0, 0)
+  }
+
+  def add[A: Monoid](items: List[A]): A = items.foldLeft(Monoid[A].empty)(_ |+| _)
+
+  val orderList = List(Order(100, 10), Order(15.3, 3), Monoid[Order].empty)
+
+  println("Adding orders: " + add(orderList))
 }
